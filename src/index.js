@@ -3,7 +3,6 @@ import '@leanix/reporting'
 import moment from 'moment'
 import Chart from 'chart.js'
 import pdfMake from 'pdfmake/build/pdfmake'
-import vfsFonts from './vfsFonts'
 import './assets/tailwind.css'
 
 const  state = {
@@ -215,7 +214,7 @@ const methods = {
       images: {
         barChart: this.$refs.barChart.toDataURL()
       },
-      defaultStyle: { font: 'Times', fontSize: 9 },
+      defaultStyle: { font: 'Roboto', fontSize: 9 },
       styles: {
         titleBlock: { alignment: 'center', margin: [0, 0, 0, 40] },
         header: { fontSize: 18, bold: true, alignment: 'center' },
@@ -225,11 +224,11 @@ const methods = {
     }
 
     const fonts = {
-      Times: {
-        normal: 'Times-Roman.ttf',
-        italics: 'Times-Italic.ttf',
-        bold: 'Times-Bold.ttf',
-        bolditalics: 'Times-BoldItalic.ttf'
+      Roboto: {
+        normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+        bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
+        italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+        bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
       }
     }
     const pdfDocGenerator = pdfMake.createPdf(dd, undefined, fonts, vfsFonts)
