@@ -1,3 +1,4 @@
+// src/index.js
 import 'alpinejs'
 import '@leanix/reporting'
 import moment from 'moment'
@@ -5,7 +6,7 @@ import Chart from 'chart.js'
 import pdfMake from 'pdfmake/build/pdfmake'
 import './assets/tailwind.css'
 
-const  state = {
+const state = {
   reportSetup: {},
   itComponents: [],
   obsoleteITComponents: [],
@@ -14,9 +15,7 @@ const  state = {
     { key: 'category', label: 'Category' },
     { key: 'name', label: 'IT Component' }
   ],
-  pdfDocGenerator: undefined,
-  dataUrl: undefined,
-  isLoading: 0,
+  dataUrl:  undefined,
   startDate: moment().format('YYYY-MM-DD'),
   endDate: moment().add(1, 'months').endOf('month').format('YYYY-MM-DD'),
   analysis: ''
@@ -28,8 +27,7 @@ const methods = {
     await lx.ready({})
   },
   async fetchDataset () {
-    const query = `
-    {
+    const query = `{
       allFactSheets(factSheetType: ITComponent) {
         edges {
           node {
@@ -48,15 +46,9 @@ const methods = {
           }
         }
       }
-    }
-    `
-    try {
-      this.isLoading++
-      this.itComponents = await lx.executeGraphQL(query)
-        .then(data => data.allFactSheets.edges.map(({ node }) => node))
-    } finally {
-      this.isLoading--
-    }
+    }`
+    this.itComponents = await lx.executeGraphQL(query)
+      .then(data => data.allFactSheets.edges.map(({ node }) => node))
   },
   computeObsolescencies () {
     let { startDate, endDate, itComponents, reportSetup } = this
@@ -139,60 +131,61 @@ const methods = {
   },
   generatePDF () {
     const dd = {
-      pageSize: 'A4',
-      pageOrientation: 'portrait',
-      pageMargins: 1 * 72, // 2.54 cm - 1 in converted to points, pageMargins is specified in points...
-      content: [
-        {
-          style: 'titleBlock',
-          stack: [
-            { text: 'Obsolescence Report', style: 'header' },
+        pageSize: 'A4',
+        pageOrientation: 'portrait',
+        pageMargins: 1 * 72, // 2.54 cm - 1 in converted to points, pageMargins is specified in points...
+        images: { barChart: this.$refs.barChart.toDataURL() },
+        defaultStyle: { font: 'Roboto', fontSize: 9 },
+        styles: {
+            titleBlock: { alignment: 'center', margin: [0, 0, 0, 40] },
+            header: { fontSize: 18, bold: true, alignment: 'center' },
+            subheader: { fontSize: 15, bold: true, alignment: 'center', margin: [0, 0, 0, 20] },
+            section: { margin: [0, 0, 0, 50] }
+        },
+        content: [
             {
-              fontSize: 10,
-              margin: [0, 15],
-              italics: true,
-              text: [
-                { text: this.startDate, bold: true },
-                ' to ',
-                { text: this.endDate, bold: true }
-              ]
-            }
-          ]
+            style: 'titleBlock',
+            stack: [
+                { text: 'Obsolescence Report', style: 'header' },
+                {
+                    fontSize: 10,
+                    margin: [0, 15],
+                    italics: true,
+                    text: [
+                        { text: this.startDate, bold: true },
+                        ' to ',
+                        { text: this.endDate, bold: true }
+                    ]
+                }
+            ]
         },
         {
-          style: 'section',
-          stack: [
-            {
-              text: 'Obsolescences per IT Component Category',
-              style: 'subheader'
-            },
-            this.obsoleteITComponents.length
-              ? { image: 'barChart', fit: [420, 200] }
-              : { text: 'No obsolete it components during this period...', italics: true, alignment: 'center' }
-          ]
+            style: 'section',
+            stack: [
+                { text: 'Obsolescences per IT Component Category', style: 'subheader' },
+                this.obsoleteITComponents.length
+                    ? { image: 'barChart', fit: [420, 200] }
+                    : { text: 'No obsolete it components during this period...', italics: true, alignment: 'center' }
+            ]
         },
-
         {
-          style: 'section',
-          stack: [
-            {
-              text: `IT Component Obsolescences`,
-              style: 'subheader'
-            },
-            !this.obsoleteITComponents.length
-              ? { text: 'No obsolete it components during this period...', italics: true, alignment: 'center' }
-              : {
+            style: 'section',
+            stack: [
+                { text: `IT Component Obsolescences`, style: 'subheader' },
+                !this.obsoleteITComponents.length
+                    ? { text: 'No obsolete it components during this period...', italics: true, alignment: 'center' }
+                    : {
                   table: {
                     widths: ['auto', 'auto', '*'],
                     headerRows: 1,
                     body: [
-                      this.columns.map(({ label }) => label),
-                      ...this.obsoleteITComponents
-                        .reduce((accumulator, itComponent) => {
-                          const row = this.columns.map(({ key }) => itComponent[key].label || itComponent[key])
-                          accumulator.push(row)
-                          return accumulator
-                        }, [])
+                        this.columns.map(({ label }) => label),
+                        ...this.obsoleteITComponents
+                            .reduce((accumulator, itComponent) => {
+                                const row = this.columns.map(({ key }) => itComponent[key].label || itComponent[key])
+                                accumulator.push(row)
+                                return accumulator
+                            }, [])
                     ]
                 }
             }
@@ -201,28 +194,14 @@ const methods = {
         {
           style: 'section',
           stack: [
-            {
-              text: 'Analysis',
-              style: 'subheader'
-            },
-            this.analysis
+          { text: 'Analysis', style: 'subheader' },
+          this.analysis
               ? { text: this.analysis, alignment: 'justify '}
               : { text: 'no comments', alignment: 'center', italics: 'true' }
           ]
         }
-      ],
-      images: {
-        barChart: this.$refs.barChart.toDataURL()
-      },
-      defaultStyle: { font: 'Roboto', fontSize: 9 },
-      styles: {
-        titleBlock: { alignment: 'center', margin: [0, 0, 0, 40] },
-        header: { fontSize: 18, bold: true, alignment: 'center' },
-        subheader: { fontSize: 15, bold: true, alignment: 'center', margin: [0, 0, 0, 20] },
-        section: { margin: [0, 0, 0, 50] }
-      }
+      ]
     }
-
     const fonts = {
       Roboto: {
         normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
@@ -231,7 +210,7 @@ const methods = {
         bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
       }
     }
-    const pdfDocGenerator = pdfMake.createPdf(dd, undefined, fonts, vfsFonts)
+    const pdfDocGenerator = pdfMake.createPdf(dd, undefined, fonts)
     pdfDocGenerator.getDataUrl(dataUrl => { this.dataUrl = dataUrl })
   }
 }
