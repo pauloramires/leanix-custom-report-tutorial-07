@@ -36,6 +36,7 @@ Configure your environment by editing the *lxr.json* file, if required:
 ```
 
 After this procedure, you should end up with the following project structure:
+
 ![](https://i.imgur.com/Am9Yx6w.png)
 
 ## Adjusting the report boilerplate source code
@@ -310,6 +311,7 @@ As a first step, we'll edit the *src/index.html* file and add the basic template
 Notice the [x-init](https://github.com/alpinejs/alpine#x-init) directive included in our *body* tag. This directive calls the *intializeReport* and *fetchDataset* methods once the report is instantiated, and add watchers for *startDate*, *endDate*, and *dataset* state variables that trigger, on change, the *computeObsolescencies* method. Notice as well that we have added a [@click](https://github.com/alpinejs/alpine#x-on) event listener in our "GeneratePDF" that calls the *generatePDF* method. Since we have previously created empty placeholders for all those methods in the *methods* object of our *src/index.js* file, we'll implement them ahead in this tutorial.
 
 Your report should look like this now:
+
 ![](https://i.imgur.com/LsWkaIX.png)
 
 
